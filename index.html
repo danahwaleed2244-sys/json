@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>سباق الرياضيات</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+/* Layout idea: a classroom race. Sky-blue field, white cards, lanes that run right-to-left toward a finish flag. One visual world (single theme). */
+:root{
+  --sky:#E4F1FF;
+  --ink:#1B2A4A;
+  --muted:#5A6A8A;
+  --card:#FFFFFF;
+  --line:#CFE0F3;
+  --sun:#FFC83D;
+  --coral:#FF6B5B;
+  --blue:#3E86F5;
+  --grass:#2FB57F;
+  --display:"Baloo Bhaijaan 2","Tajawal",system-ui,sans-serif;
+  --body:"Tajawal",system-ui,"Segoe UI",Tahoma,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--sky);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.55}
+h1,h2,h3{font-family:var(--display);line-height:1.25;margin:0;text-wrap:balance}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.hidden{display:none !important}
+.wrap{max-width:1180px;margin:0 auto;padding:20px 16px 40px}
+.card{background:var(--card);border-radius:18px;padding:20px;box-shadow:0 2px 0 var(--line)}
+.btn{border:0;border-radius:14px;padding:12px 20px;font-weight:800;font-size:17px;background:var(--ink);color:#fff;box-shadow:0 4px 0 #0c1630;transition:transform .08s}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 #0c1630}
+.btn.sun{background:var(--sun);color:var(--ink);box-shadow:0 4px 0 #c99412}
+.btn.grass{background:var(--grass);box-shadow:0 4px 0 #1b7d55}
+.btn.coral{background:var(--coral);box-shadow:0 4px 0 #c2402f}
+.btn.ghost{background:transparent;color:var(--ink);box-shadow:none;border:2px solid var(--line)}
+.btn.small{padding:7px 12px;font-size:15px;border-radius:10px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.muted{color:var(--muted)}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-weight:700;font-size:15px}
+.input{border:2px solid var(--line);border-radius:12px;padding:11px 14px;background:#fff;width:100%}
+.input:focus{border-color:var(--blue);outline:none}
+.chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 12px;font-weight:700;font-size:14px;background:#fff;border:2px solid var(--line)}
+.chip .dot{width:9px;height:9px;border-radius:50%;background:var(--muted)}
+.chip.live .dot{background:var(--grass)}
+.chip.run{background:var(--sun);border-color:var(--sun)}
+.chip.end{background:var(--grass);border-color:var(--grass);color:#fff}
+.banner{background:#FFF1D6;border:2px solid var(--sun);border-radius:14px;padding:12px 16px;font-weight:500}
+.brand{display:flex;align-items:center;gap:10px}
+.brand .logo{font-size:30px}
+.brand h1{font-size:28px}
+
+/* school / subject / teacher credits */
+.school{font-weight:800;font-size:15px;color:var(--blue);letter-spacing:.2px}
+.credits{display:flex;flex-wrap:wrap;gap:6px 0;justify-content:center;font-weight:700;color:var(--muted);font-size:15px}
+.credits.left{justify-content:flex-start}
+.credits span:empty{display:none}
+.credits span:not(:empty) ~ span:not(:empty)::before{content:"·";margin:0 8px;color:var(--line)}
+.intro{text-align:center;display:flex;flex-direction:column;gap:2px;padding-bottom:10px;border-bottom:2px dashed var(--line)}
+.endmode{border:0;padding:0;margin:0}
+.endmode legend{font-weight:700;font-size:15px;padding:0;margin-bottom:6px}
+.radio{display:flex;align-items:center;gap:8px;font-weight:500;cursor:pointer;padding:4px 0}
+.radio input{accent-color:var(--blue);width:18px;height:18px}
+.filebox{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:16px}
+.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+label.btn:focus-within,#q-file:focus-visible + *{outline:3px solid var(--blue)}
+
+/* question images */
+.qimg-edit{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.qimg-edit img{max-height:110px;max-width:220px;border-radius:10px;border:2px solid var(--line);background:#fff}
+.qimg{display:flex;justify-content:center}
+.qimg-btn{border:0;background:#fff;padding:0;display:flex;flex-direction:column;align-items:center;gap:4px;width:100%}
+.qimg-btn img{max-width:100%;max-height:38vh;object-fit:contain;border-radius:10px}
+.zoomhint{font-size:13px;color:var(--muted);font-weight:700}
+.qimg-wait{padding:30px 10px;color:var(--muted);text-align:center;width:100%;background:var(--sky);border-radius:10px}
+.zoom{position:fixed;inset:0;background:rgba(10,18,36,.94);z-index:30;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:12px}
+.zoom img{max-width:100%;max-height:88%;object-fit:contain;background:#fff;border-radius:8px}
+.zoom span{color:#fff;font-weight:700}
+
+/* splash */
+.splash{min-height:100%;display:grid;place-items:center;padding:24px 16px}
+.splash .card{max-width:440px;width:100%;text-align:center;display:flex;flex-direction:column;gap:16px}
+.splash .big{font-size:56px;line-height:1}
+
+/* teacher setup */
+.setup{display:grid;grid-template-columns:320px 1fr;gap:20px;align-items:start}
+.setup aside{display:flex;flex-direction:column;gap:16px;position:sticky;top:16px}
+.qlist{display:flex;flex-direction:column;gap:14px}
+.qcard{display:flex;flex-direction:column;gap:10px}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.qnum{font-family:var(--display);font-weight:800;font-size:20px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.opt{display:flex;align-items:center;gap:8px;border:2px solid var(--line);border-radius:12px;padding:4px 10px;background:#fff}
+.opt.correct{border-color:var(--grass);background:#E7F8F0}
+.opt input[type=text]{border:0;padding:8px 2px;width:100%;background:transparent}
+.opt input[type=text]:focus{outline:none}
+.opt input[type=radio]{accent-color:var(--grass);width:18px;height:18px;flex:none}
+.pinbox{font-family:var(--display);font-size:40px;font-weight:800;letter-spacing:6px;text-align:center;background:var(--sky);border-radius:14px;padding:6px;font-variant-numeric:tabular-nums}
+.meter{height:8px;background:var(--sky);border-radius:99px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--grass)}
+.meter.warn i{background:var(--coral)}
+
+/* stage */
+.stage-top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.stage-top h2{font-size:30px}
+.stage{display:grid;grid-template-columns:280px 1fr 260px;gap:16px;align-items:start}
+.joinpanel{display:flex;flex-direction:column;gap:12px;align-items:center;text-align:center}
+.qr{background:#fff;padding:10px;border-radius:14px;border:2px solid var(--line);display:grid;place-items:center;min-height:120px}
+.qr img,.qr canvas{display:block;max-width:100%;height:auto}
+.joinpanel .pin{font-family:var(--display);font-size:54px;font-weight:800;letter-spacing:8px;line-height:1;font-variant-numeric:tabular-nums}
+.linktext{font-size:12px;color:var(--muted);word-break:break-all;direction:ltr}
+.stage.compact .joinpanel .pin{font-size:38px}
+.track{display:flex;flex-direction:column;gap:6px;padding:14px}
+.track-head{display:flex;justify-content:space-between;font-weight:700;font-size:14px;color:var(--muted);padding:0 4px 6px}
+.lane{display:grid;grid-template-columns:150px 1fr;gap:10px;align-items:center}
+.lane .who{display:flex;flex-direction:column;line-height:1.2;min-width:0}
+.lane .who b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lane .who small{color:var(--muted);font-variant-numeric:tabular-nums}
+.road{position:relative;height:46px;border-radius:12px;background:repeating-linear-gradient(to left,#EEF5FC 0 calc(100%/var(--steps)),#F7FBFF calc(100%/var(--steps)) calc(200%/var(--steps)));border:2px solid var(--line)}
+.road::after{content:"🏁";position:absolute;inset-inline-end:4px;top:50%;transform:translateY(-50%);font-size:22px;opacity:.9}
+.runner{position:absolute;top:50%;inset-inline-start:calc(var(--p) * (100% - 76px) + 2px);transform:translateY(-50%);font-size:32px;line-height:1;transition:inset-inline-start .9s cubic-bezier(.3,1.4,.5,1);display:flex;align-items:center;gap:4px}
+.runner .rk{font-family:var(--display);font-size:13px;font-weight:800;background:var(--ink);color:#fff;border-radius:99px;min-width:22px;height:22px;display:grid;place-items:center;padding:0 5px}
+.runner.done .rk{background:var(--grass)}
+.lane.off{opacity:.45}
+.lane.demo .who b::after{content:" · تجريبية";font-weight:500;color:var(--muted);font-size:12px}
+.track.dense .road{height:36px}
+.track.dense .runner{font-size:24px}
+.empty{padding:40px 16px;text-align:center;color:var(--muted)}
+.empty .big{font-size:48px}
+.board{display:flex;flex-direction:column;gap:8px}
+.board h3{font-size:20px}
+.brow{display:grid;grid-template-columns:30px 34px 1fr auto;gap:8px;align-items:center;padding:6px 8px;border-radius:12px;background:var(--sky)}
+#board .brow:first-child{background:#FFF3CF}
+.brow .n{font-family:var(--display);font-weight:800;text-align:center}
+.brow .a{font-size:24px}
+.brow b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brow .s{font-weight:800;font-variant-numeric:tabular-nums}
+.controls{display:flex;flex-direction:column;gap:10px;margin-top:16px}
+.lobbyfaces{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;padding:6px}
+.face{display:flex;flex-direction:column;align-items:center;width:84px;animation:pop .4s ease-out}
+.face span{font-size:40px;line-height:1.1}
+.face b{font-size:14px;max-width:84px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@keyframes pop{from{transform:scale(.4);opacity:.2}to{transform:scale(1);opacity:1}}
+
+/* podium */
+.podium-wrap{position:fixed;inset:0;background:rgba(27,42,74,.92);z-index:20;overflow:auto;padding:24px 16px}
+.podium-inner{max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:20px;color:#fff;position:relative;z-index:2}
+.podium-inner h2{font-size:40px;text-align:center;color:var(--sun)}
+.podium{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;align-items:end;min-height:340px}
+.pcol{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.pcol .pav{font-size:64px;line-height:1}
+.pcol.first .pav{font-size:86px}
+.pcol b{font-size:20px}
+.pcol small{opacity:.85;font-variant-numeric:tabular-nums}
+.block{width:100%;border-radius:14px 14px 0 0;display:grid;place-items:center;font-family:var(--display);font-size:44px;font-weight:800;color:var(--ink)}
+.pcol.first .block{height:170px;background:var(--sun)}
+.pcol.second .block{height:120px;background:#D9E4F2}
+.pcol.third .block{height:90px;background:#F2B78A}
+.rest{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px}
+.rest .brow{background:rgba(255,255,255,.1);color:#fff}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:1}
+
+/* student */
+.phone{max-width:520px;margin:0 auto;padding:18px 16px 40px;display:flex;flex-direction:column;gap:16px;min-height:100%}
+.phone .card{display:flex;flex-direction:column;gap:14px}
+.avgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.av{border:3px solid var(--line);background:#fff;border-radius:16px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.av span{font-size:40px;line-height:1.1}
+.av small{font-size:13px;font-weight:700}
+.av em{font-style:normal;font-size:11px;color:var(--muted);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.av.sel{border-color:var(--blue);background:#EAF2FF;transform:scale(1.04)}
+.hello{text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px}
+.hello .me{font-size:84px;line-height:1;animation:bob 1.6s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-8px)}}
+.qprog{display:flex;justify-content:space-between;font-weight:700;color:var(--muted)}
+.bar{height:10px;border-radius:99px;background:#fff;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--grass);transition:width .4s}
+.qtext{font-family:var(--display);font-size:26px;font-weight:700;text-align:center;padding:10px 4px}
+.answers{display:grid;grid-template-columns:1fr;gap:10px}
+.ans{border:0;border-radius:16px;padding:16px 18px;font-size:20px;font-weight:800;color:#fff;text-align:start;display:flex;align-items:center;gap:12px;box-shadow:0 5px 0 rgba(0,0,0,.18)}
+.ans .shape{font-size:18px;opacity:.9;flex:none}
+.ans.c0{background:var(--coral)}
+.ans.c1{background:var(--blue)}
+.ans.c2{background:#E9A800}
+.ans.c3{background:var(--grass)}
+.ans.dim{opacity:.35}
+.ans.right{outline:5px solid #fff;box-shadow:0 0 0 9px var(--grass)}
+.ans.wrong{outline:5px solid #fff;box-shadow:0 0 0 9px var(--ink)}
+.feedback{text-align:center;font-family:var(--display);font-size:28px;font-weight:800;min-height:44px}
+.feedback.ok{color:var(--grass)}
+.feedback.no{color:var(--coral)}
+.result{text-align:center;display:flex;flex-direction:column;gap:6px;align-items:center}
+.result .medal{font-size:72px;line-height:1}
+.result .rank{font-family:var(--display);font-size:34px;font-weight:800}
+.statusline{text-align:center;font-size:14px}
+
+@media (max-width:1000px){
+  .stage{grid-template-columns:1fr}
+  .setup{grid-template-columns:1fr}
+  .setup aside{position:static}
+}
+@media (max-width:560px){
+  .opts{grid-template-columns:1fr}
+  .lane{grid-template-columns:96px 1fr}
+  .podium{min-height:260px}
+  .pcol .pav{font-size:44px}.pcol.first .pav{font-size:56px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none !important;transition:none !important}
+}
+</style>
+</head>
+<body>
+
+<!-- Splash / role chooser -->
+<section id="v-splash" class="splash">
+  <div class="card">
+    <div class="big">👧🧕👩‍🎓</div>
+    <div class="school" data-school></div>
+    <h1>سباق الرياضيات</h1>
+    <div class="credits"><span data-subject></span><span data-teacher></span></div>
+    <p class="muted" style="margin:0">كل طالبة تختار شخصيتها وتتسابق مع زميلاتها على شاشة الفصل.</p>
+    <button class="btn sun" id="go-student" type="button">دخول الطالبة</button>
+  </div>
+</section>
+
+<!-- ============ TEACHER: SETUP ============ -->
+<section id="v-setup" class="wrap hidden">
+  <div class="stage-top">
+    <div class="brand"><span class="logo">🏁</span><h1>إعداد السباق</h1></div>
+    <span class="chip" id="conn-setup"><span class="dot"></span><span>جارٍ الاتصال…</span></span>
+  </div>
+  <div id="setup-banner" class="banner hidden" style="margin-bottom:16px"></div>
+  <div class="setup">
+    <aside>
+      <div class="card" style="display:flex;flex-direction:column;gap:14px">
+        <div class="field">
+          <label for="in-title">اسم المسابقة</label>
+          <input class="input" id="in-title" type="text" maxlength="60">
+        </div>
+        <div class="field">
+          <label for="in-subject">المادة</label>
+          <input class="input" id="in-subject" type="text" maxlength="40">
+        </div>
+        <div class="field">
+          <label for="in-teacher">اسم المعلمة</label>
+          <input class="input" id="in-teacher" type="text" maxlength="50">
+        </div>
+        <div class="field">
+          <label for="in-school">المدرسة</label>
+          <input class="input" id="in-school" type="text" maxlength="60">
+        </div>
+        <fieldset class="field endmode">
+          <legend>متى ينتهي السباق؟</legend>
+          <label class="radio"><input type="radio" name="endmode" id="em-all" value="all"> لما تخلص كل الطالبات</label>
+          <label class="radio"><input type="radio" name="endmode" id="em-top3" value="top3"> لما توصل أول 3 طالبات</label>
+          <small class="muted">تقدرين دائماً تنهينه بنفسك بزر «إنهاء».</small>
+        </fieldset>
+        <div class="field">
+          <label>الرقم السري للصفحة</label>
+          <div class="pinbox" id="pin-show">0000</div>
+          <div class="row">
+            <input class="input" id="in-pin" type="text" inputmode="numeric" maxlength="6" style="flex:1" aria-label="الرقم السري">
+            <button class="btn small ghost" id="pin-new" type="button">رقم جديد</button>
+          </div>
+          <small class="muted">رقم واحد لكل الطالبات، يظهر على الشاشة مع الباركود.</small>
+        </div>
+        <div class="field">
+          <label for="in-link">رابط دخول الطالبات (للباركود)</label>
+          <input class="input" id="in-link" type="text" dir="ltr" placeholder="https://username.github.io/…">
+        </div>
+        <button class="btn grass" id="open-stage" type="button">افتحي شاشة السباق ▶</button>
+      </div>
+    </aside>
+    <div>
+      <div class="row" style="justify-content:space-between;margin-bottom:12px">
+        <h2 style="font-size:24px">الأسئلة (المراحل)</h2>
+        <span class="muted" id="q-count"></span>
+      </div>
+      <div class="qlist" id="qlist"></div>
+      <div class="row" style="margin-top:14px">
+        <button class="btn sun" id="q-add" type="button">+ إضافة سؤال</button>
+        <span class="muted">اختاري الإجابة الصحيحة بالدائرة بجانبها.</span>
+      </div>
+      <div class="card filebox">
+        <div>
+          <h3 style="font-size:19px">ملفات الأسئلة</h3>
+          <small class="muted">احفظي أسئلة كل فصل أو درس في ملف، وافتحيه من أي جهاز.</small>
+        </div>
+        <div class="row">
+          <button class="btn small" id="q-save" type="button">حفظ الأسئلة كملف ⬇</button>
+          <label class="btn small ghost" for="q-file" style="display:inline-block">فتح ملف أسئلة ⬆</label>
+          <input id="q-file" type="file" accept=".json,application/json" class="visually-hidden">
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TEACHER: STAGE ============ -->
+<section id="v-stage" class="wrap hidden">
+  <div class="stage-top">
+    <div class="brand"><span class="logo">🏁</span><div><h2 id="st-title"></h2><div class="credits left"><span data-subject></span><span data-teacher></span><span data-school></span></div></div></div>
+    <div class="row">
+      <span class="chip" id="st-status"><span class="dot"></span><span></span></span>
+      <span class="chip" id="conn-stage"><span class="dot"></span><span></span></span>
+    </div>
+  </div>
+  <div id="stage-banner" class="banner hidden" style="margin-bottom:16px"></div>
+  <div class="stage" id="stage-grid">
+    <div class="card joinpanel">
+      <h3 style="font-size:20px">ادخلي من هنا</h3>
+      <div class="qr" id="qr"></div>
+      <div class="muted" style="font-weight:700">الرقم السري</div>
+      <div class="pin" id="st-pin"></div>
+      <div class="linktext" id="st-link"></div>
+    </div>
+    <div class="card" style="padding:0">
+      <div id="lobby-view">
+        <div class="track-head" style="padding:16px 18px 0"><span>الطالبات في الانتظار</span><span id="lobby-count"></span></div>
+        <div class="lobbyfaces" id="lobby-faces"></div>
+      </div>
+      <div id="race-view" class="track hidden">
+        <div class="track-head"><span>البداية</span><span id="race-qs"></span><span>خط النهاية</span></div>
+        <div id="lanes" style="display:flex;flex-direction:column;gap:6px"></div>
+      </div>
+    </div>
+    <div>
+      <div class="card board">
+        <h3>الترتيب الآن</h3>
+        <div id="board"></div>
+      </div>
+      <div class="controls">
+        <button class="btn grass" id="btn-start" type="button">ابدئي السباق ▶</button>
+        <button class="btn coral hidden" id="btn-end" type="button">إنهاء وإعلان الفائزات 🏆</button>
+        <button class="btn sun hidden" id="btn-podium" type="button">عرض الفائزات 🏆</button>
+        <button class="btn hidden" id="btn-again" type="button">جولة جديدة بنفس الأسئلة</button>
+        <button class="btn ghost" id="btn-edit" type="button">تعديل الأسئلة</button>
+        <button class="btn ghost small" id="btn-demo" type="button">إضافة لاعبات تجريبيات للتجربة</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PODIUM ============ -->
+<div id="podium" class="podium-wrap hidden" role="dialog" aria-label="الفائزات">
+  <canvas id="confetti"></canvas>
+  <div class="podium-inner">
+    <h2>🏆 الفائزات 🏆</h2>
+    <div class="podium" id="podium-cols"></div>
+    <div class="rest" id="podium-rest"></div>
+    <div class="row" style="justify-content:center">
+      <button class="btn sun" id="podium-close" type="button">رجوع للسباق</button>
+    </div>
+  </div>
+</div>
+
+<div id="zoom" class="zoom hidden" role="dialog" aria-label="الصورة مكبّرة"><img id="zoom-img" alt="صورة السؤال مكبّرة"><span>اضغطي للإغلاق</span></div>
+
+<!-- ============ STUDENT ============ -->
+<section id="v-student" class="phone hidden">
+  <div class="row" style="justify-content:space-between">
+    <div class="brand"><span class="logo">🏁</span><h1 style="font-size:24px" id="s-brand">سباق الرياضيات</h1></div>
+    <span class="chip" id="conn-student"><span class="dot"></span><span></span></span>
+  </div>
+
+  <div id="s-join" class="card">
+    <div class="intro">
+      <div class="school" data-school></div>
+      <div class="credits"><span data-subject></span><span data-teacher></span></div>
+    </div>
+    <h2 style="font-size:24px">أهلاً! ادخلي اللعبة</h2>
+    <div class="field">
+      <label for="s-pin">الرقم السري</label>
+      <input class="input" id="s-pin" type="text" inputmode="numeric" maxlength="6" autocomplete="off" style="font-size:24px;letter-spacing:4px;text-align:center">
+    </div>
+    <div class="field">
+      <label for="s-name">اسمك</label>
+      <input class="input" id="s-name" type="text" maxlength="24" autocomplete="off">
+    </div>
+    <div id="s-join-err" class="banner hidden"></div>
+    <button class="btn sun" id="s-join-btn" type="button">التالي ←</button>
+  </div>
+
+  <div id="s-avatar" class="card hidden">
+    <h2 style="font-size:24px">اختاري شخصيتك</h2>
+    <div class="avgrid" id="s-avgrid"></div>
+    <button class="btn grass" id="s-av-btn" type="button" disabled>دخول السباق ←</button>
+  </div>
+
+  <div id="s-wait" class="card hidden">
+    <div class="hello">
+      <div class="me" id="s-wait-me"></div>
+      <h2 style="font-size:26px" id="s-wait-hi"></h2>
+      <p class="muted" style="margin:0">انتظري حتى تبدأ المعلمة السباق. اسمك ظاهر الآن على الشاشة.</p>
+    </div>
+    <div class="lobbyfaces" id="s-wait-faces"></div>
+    <button class="btn ghost small" id="s-change" type="button">تغيير الشخصية</button>
+  </div>
+
+  <div id="s-q" class="hidden" style="display:flex;flex-direction:column;gap:14px">
+    <div class="qprog"><span id="s-qnum"></span><span id="s-me-small"></span></div>
+    <div class="bar"><i id="s-bar" style="width:0"></i></div>
+    <div class="card"><div class="qtext" id="s-qtext"></div><div id="s-qimg" class="qimg hidden"></div></div>
+    <div class="answers" id="s-answers"></div>
+    <div class="feedback" id="s-feedback"></div>
+  </div>
+
+  <div id="s-done" class="card hidden">
+    <div class="result">
+      <div class="medal" id="s-medal"></div>
+      <div class="rank" id="s-rank"></div>
+      <div id="s-score" style="font-weight:700"></div>
+      <p class="muted" id="s-done-note" style="margin:0"></p>
+    </div>
+  </div>
+
+  <div id="s-off" class="card hidden">
+    <h2 style="font-size:22px">تعذّر الاتصال بالسباق</h2>
+    <p style="margin:0">تأكدي أن الإنترنت يعمل ثم حدّثي الصفحة.</p>
+  </div>
+</section>
+
+<script>
+"use strict";
+/* ================== CONNECTION SETTINGS ==================
+   Live updates travel through a free public MQTT broker (no account needed).
+   NS keeps this game's messages apart from everyone else's on that broker. */
+const NS = "sibaq-quiz-v1";
+const BROKERS = [
+  "wss://broker.emqx.io:8084/mqtt",
+  "wss://broker.hivemq.com:8884/mqtt",
+  "wss://test.mosquitto.org:8081/mqtt"
+];
+const MQTT_LIBS = [
+  "https://unpkg.com/mqtt@4.3.7/dist/mqtt.min.js",
+  "https://cdn.jsdelivr.net/npm/mqtt@4.3.7/dist/mqtt.min.js"
+];
+
+const AVATARS = [
+  ["👧","طالبة"],["👩‍🎓","خرّيجة"],["🧕","محجّبة"],["👩‍🏫","معلّمة"],["👩‍🔬","عالِمة"],["👩‍💻","مبرمجة"],
+  ["👩‍⚕️","طبيبة"],["👩‍🚀","رائدة فضاء"],["👩‍🎨","رسّامة"],["👩‍🍳","طاهية"],["👩‍✈️","طيّارة"],["👩‍🔧","مهندسة"],
+  ["👸","أميرة"],["🦸‍♀️","بطلة خارقة"],["🏃‍♀️","عدّاءة"],["🤸‍♀️","رياضية"],["👩‍🌾","مزارعة"],["🙋‍♀️","نشيطة"]
+];
+const SHAPES = ["▲","◆","●","■"];
+const ORD = ["الأولى","الثانية","الثالثة","الرابعة","الخامسة","السادسة","السابعة","الثامنة","التاسعة","العاشرة"];
+const ordinal = n => n <= 10 ? ORD[n-1] : ("رقم " + n);
+
+const DEFAULT_INFO = { title:"سباق الرياضيات", subject:"الرياضيات", teacher:"أ. لطفيه الطلحي", school:"متوسطة السيل الصغير" };
+// Example questions; the teacher replaces them in the setup screen or from a questions file.
+const DEFAULT_QS = [
+  {t:"ما الجذر التربيعي للعدد 81؟", o:["9","8","18","81"], c:0},
+  {t:"ما قيمة 3² + 4 ؟", o:["10","13","25","49"], c:1},
+  {t:"حل المعادلة: س + 8 = 15", o:["23","8","7","120"], c:2},
+  {t:"كم يساوي 25٪ من 80؟", o:["20","25","16","40"], c:0},
+  {t:"مجموع قياسات زوايا المثلث الداخلية يساوي:", o:["90°","360°","180°","270°"], c:2},
+  {t:"أبسط صورة للكسر 12/18 هي:", o:["3/4","2/3","6/9","4/6"], c:1}
+];
+
+/* ---------- helpers ---------- */
+const $ = id => document.getElementById(id);
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); return true; }catch(e){ return false; } }
+};
+function h(tag, attrs, ...kids){
+  const el = document.createElement(tag);
+  if (attrs) for (const [k,v] of Object.entries(attrs)){
+    if (v == null || v === false) continue;
+    if (k === "class") el.className = v;
+    else if (k === "style") el.setAttribute("style", v);
+    else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+    else if (k === "text") el.textContent = v;
+    else el.setAttribute(k, v === true ? "" : v);
+  }
+  for (const kid of kids.flat()){
+    if (kid == null || kid === false) continue;
+    el.appendChild(typeof kid === "string" || typeof kid === "number" ? document.createTextNode(String(kid)) : kid);
+  }
+  return el;
+}
+function show(id){
+  for (const v of ["v-splash","v-setup","v-stage","v-student"]) $(v).classList.toggle("hidden", v !== id);
+}
+function applyCredits(info){
+  const set = (attr, v) => document.querySelectorAll("[" + attr + "]").forEach(el => { el.textContent = v || ""; });
+  set("data-subject", info.subject ? "مادة " + info.subject : "");
+  set("data-teacher", info.teacher || "");
+  set("data-school", info.school || "");
+}
+applyCredits(DEFAULT_INFO);
+const clean = (s, n) => String(s == null ? "" : s).replace(/[\u0000-\u001f\u200b\u200c\u200e\u200f\u202a-\u202e\u2060-\u2064\ufeff]/g, "").trim().slice(0, n);
+const fmtTime = ms => { if (!ms && ms !== 0) return "—"; const s = Math.round(ms/1000); return s < 60 ? s + " ث" : Math.floor(s/60) + ":" + String(s%60).padStart(2,"0") + " د"; };
+const randPin = () => String(Math.floor(100000 + Math.random()*900000));
+const randId = n => Math.random().toString(36).slice(2, 2 + n);
+const toLatinDigits = s => String(s).replace(/[٠-٩]/g, d => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)));
+const studentLink = () => location.origin + location.pathname + "#student";
+
+/* Ranking: most correct, then finished, then answered more, then fastest. */
+function ranked(list){
+  return [...list].sort((a,b) =>
+    (b.c - a.c) || ((b.d?1:0) - (a.d?1:0)) || (b.i - a.i) || ((a.t || 1e12) - (b.t || 1e12)) || String(a.n).localeCompare(String(b.n), "ar"));
+}
+function setConnAll(state){
+  for (const id of ["conn-setup","conn-stage","conn-student"]){
+    const chip = $(id); if (!chip) continue;
+    chip.classList.toggle("live", state === "on");
+    chip.lastElementChild.textContent = state === "on" ? "متصل مباشر" : state === "off" ? "غير متصل" : "جارٍ الاتصال…";
+  }
+}
+
+/* ================= NETWORK (MQTT) ================= */
+const NET = { client:null, up:false, failed:false, subs:new Set(), handlers:[], onUp:[] };
+const topicHost = pin => NS + "/" + pin + "/host";
+const topicPlayers = pin => NS + "/" + pin + "/p/+";
+const topicPlayer = (pin, id) => NS + "/" + pin + "/p/" + id;
+const topicImg = (pin, id) => NS + "/" + pin + "/img/" + id;
+const topicImgs = pin => NS + "/" + pin + "/img/+";
+
+function loadScript(urls){
+  return new Promise(resolve => {
+    let i = 0;
+    const next = () => {
+      if (typeof mqtt !== "undefined") return resolve(true);
+      if (i >= urls.length) return resolve(false);
+      const s = document.createElement("script");
+      s.src = urls[i++]; s.onload = () => resolve(typeof mqtt !== "undefined") ; s.onerror = next;
+      document.head.appendChild(s);
+    };
+    next();
+  });
+}
+async function netStart(){
+  setConnAll("wait");
+  const ok = await loadScript(MQTT_LIBS);
+  if (!ok){ NET.failed = true; setConnAll("off"); refreshAll(); return; }
+  let attempt = 0;
+  const tryBroker = () => {
+    const url = BROKERS[attempt % BROKERS.length]; attempt++;
+    let c;
+    try {
+      c = mqtt.connect(url, { clientId: "sb_" + randId(10), clean: true, keepalive: 30, connectTimeout: 7000, reconnectPeriod: 2500 });
+    } catch(e){ if (attempt < BROKERS.length * 2) setTimeout(tryBroker, 500); else { NET.failed = true; setConnAll("off"); refreshAll(); } return; }
+    let connectedOnce = false;
+    const giveUp = setTimeout(() => {
+      if (connectedOnce) return;
+      try { c.end(true); } catch(e){}
+      if (attempt < BROKERS.length * 2) tryBroker(); else { NET.failed = true; setConnAll("off"); refreshAll(); }
+    }, 8000);
+    c.on("connect", () => {
+      connectedOnce = true; clearTimeout(giveUp);
+      NET.client = c; NET.up = true; NET.failed = false; setConnAll("on");
+      for (const t of NET.subs) c.subscribe(t, {qos:1});
+      for (const fn of NET.onUp) { try { fn(); } catch(e){ console.error(e); } }
+      refreshAll();
+    });
+    c.on("reconnect", () => { if (connectedOnce) setConnAll("wait"); });
+    c.on("offline", () => { if (connectedOnce){ NET.up = false; setConnAll("wait"); } });
+    c.on("error", e => console.warn("mqtt", e && e.message));
+    c.on("message", (topic, buf) => {
+      const txt = buf ? buf.toString() : "";
+      let data = null;
+      if (txt){ if (txt.length > 600000) return; try { data = JSON.parse(txt); } catch(e){ return; } }
+      for (const fn of NET.handlers) { try { fn(topic, data); } catch(e){ console.error(e); } }
+    });
+  };
+  tryBroker();
+}
+function netSub(t){ if (NET.subs.has(t)) return; NET.subs.add(t); if (NET.client && NET.up) NET.client.subscribe(t, {qos:1}); }
+function netUnsub(t){ if (!NET.subs.delete(t)) return; if (NET.client) NET.client.unsubscribe(t); }
+function netPub(t, obj){ if (NET.client) NET.client.publish(t, obj == null ? "" : JSON.stringify(obj), {qos:1, retain:true}); }
+function onMessage(fn){ NET.handlers.push(fn); }
+function onNetUp(fn){ NET.onUp.push(fn); }
+function parseTopic(topic){
+  const parts = topic.split("/");
+  if (parts[0] !== NS) return null;
+  if (parts[2] === "host") return {pin: parts[1], kind: "host"};
+  if (parts[2] === "p" && parts[3]) return {pin: parts[1], kind: "p", id: parts[3]};
+  if (parts[2] === "img" && parts[3]) return {pin: parts[1], kind: "img", id: parts[3]};
+  return null;
+}
+let MODE = null;
+function refreshAll(){
+  if (MODE === "teacher"){ setupBanner(); if (T.status !== "setup") renderStage(); }
+  else if (MODE === "student") studentRender();
+}
+
+/* ================= IMAGES ================= */
+// Images are shrunk on the teacher's device, then sent once per question on their own channel.
+const IMG_MAX_CHARS = 120000; // about 90 KB per picture
+const isImgData = v => typeof v === "string" && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(v) && v.length <= 400000;
+function imgId(data){
+  let h1 = 5381, h2 = 52711;
+  for (let i = 0; i < data.length; i++){ const c = data.charCodeAt(i); h1 = (h1 * 33) ^ c; h2 = (h2 * 31) ^ c; }
+  return (h1 >>> 0).toString(36) + (h2 >>> 0).toString(36);
+}
+function loadImage(file){
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file), im = new Image();
+    im.onload = () => { URL.revokeObjectURL(url); resolve(im); };
+    im.onerror = () => { URL.revokeObjectURL(url); reject(new Error("bad image")); };
+    im.src = url;
+  });
+}
+async function shrinkImage(file){
+  const im = await loadImage(file);
+  let scale = Math.min(1, 1100 / im.naturalWidth, 900 / im.naturalHeight);
+  for (let round = 0; round < 6; round++){
+    const w = Math.max(1, Math.round(im.naturalWidth * scale)), hh = Math.max(1, Math.round(im.naturalHeight * scale));
+    const cv = document.createElement("canvas"); cv.width = w; cv.height = hh;
+    const ctx = cv.getContext("2d"); ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, w, hh); ctx.drawImage(im, 0, 0, w, hh);
+    for (const q of [0.82, 0.7, 0.58, 0.46]){
+      const d = cv.toDataURL("image/jpeg", q);
+      if (d.length <= IMG_MAX_CHARS) return d;
+    }
+    scale *= 0.75;
+  }
+  throw new Error("too big");
+}
+
+/* ================= TEACHER ================= */
+const T = {
+  cfg: null,           // {title, pin, link, qs}
+  g: null, status: "setup",
+  players: new Map(),  // id -> player
+  order: [],
+  subPin: null,
+  demo: false, demoTimer: null, qrFor: null
+};
+function loadCfg(){
+  const c = store.get("sibaq_cfg", null);
+  T.cfg = {
+    title: (c && c.title) || DEFAULT_INFO.title,
+    subject: (c && typeof c.subject === "string") ? c.subject : DEFAULT_INFO.subject,
+    // Earlier copies saved a misspelled name; swap it for the correct one.
+    teacher: (c && typeof c.teacher === "string" && c.teacher !== "أ. لطيفة الطلحي") ? c.teacher : DEFAULT_INFO.teacher,
+    school: (c && typeof c.school === "string") ? c.school : DEFAULT_INFO.school,
+    endMode: (c && c.endMode === "top3") ? "top3" : "all",
+    pin: (c && c.pin) || randPin(),
+    link: (c && c.link) || studentLink(),
+    qs: (c && Array.isArray(c.qs) && c.qs.length) ? c.qs : DEFAULT_QS.map(q => ({t:q.t, o:[...q.o], c:q.c}))
+  };
+}
+function saveCfg(){
+  const ok = store.set("sibaq_cfg", T.cfg);
+  if (!ok && T.cfg.qs.some(q => q.img)) flash("ذاكرة المتصفح امتلأت بالصور، فلن تُحفظ آخر التعديلات بعد إغلاق الصفحة. احفظي الأسئلة كملف لتبقى معك.", true);
+  return ok;
+}
+const packedQs = () => T.cfg.qs.map(q => [clean(q.t, 300), q.o.map(o => clean(o, 120)), q.c, isImgData(q.img) ? imgId(q.img) : null]);
+const sentImgs = new Set();
+function publishImages(force){
+  for (const q of T.cfg.qs){
+    if (!isImgData(q.img)) continue;
+    const id = imgId(q.img), key = T.cfg.pin + "/" + id;
+    if (!force && sentImgs.has(key)) continue;
+    sentImgs.add(key);
+    netPub(topicImg(T.cfg.pin, id), {d:q.img});
+  }
+}
+const cfgCredits = () => ({ subject:clean(T.cfg.subject, 40), teacher:clean(T.cfg.teacher, 50), school:clean(T.cfg.school, 60) });
+const hostPayload = () => ({ g:T.g, pin:T.cfg.pin, ti:clean(T.cfg.title, 60), cr:cfgCredits(), em:T.cfg.endMode, s:T.status, q:packedQs(), ts:Date.now() });
+function publishHost(){
+  if (T.status === "setup" || !T.g) return;
+  netPub(topicHost(T.cfg.pin), hostPayload());
+}
+onNetUp(() => { if (MODE === "teacher" && T.status !== "setup"){ publishImages(true); publishHost(); } });
+
+function renderSetup(){
+  show("v-setup");
+  $("in-title").value = T.cfg.title;
+  $("in-subject").value = T.cfg.subject;
+  $("in-teacher").value = T.cfg.teacher;
+  $("in-school").value = T.cfg.school;
+  $(T.cfg.endMode === "top3" ? "em-top3" : "em-all").checked = true;
+  applyCredits(cfgCredits());
+  $("in-pin").value = T.cfg.pin;
+  $("pin-show").textContent = T.cfg.pin;
+  $("in-link").value = T.cfg.link || "";
+  renderQList();
+  setupBanner();
+}
+function setupBanner(){
+  const b = $("setup-banner");
+  if (NET.failed){
+    b.textContent = "تعذّر الاتصال بخادم البث المباشر. تأكدي من الإنترنت، أو أن شبكة المدرسة لا تحجب الاتصال، ثم حدّثي الصفحة. يمكنك تجربة السباق باللاعبات التجريبيات.";
+    b.classList.remove("hidden");
+  } else b.classList.add("hidden");
+}
+function renderQList(){
+  const list = $("qlist"); list.textContent = "";
+  T.cfg.qs.forEach((q, qi) => {
+    const opts = h("div", {class:"opts"});
+    q.o.forEach((o, oi) => {
+      const radio = h("input", {type:"radio", name:"c"+qi, id:"q"+qi+"c"+oi, "aria-label":"الإجابة الصحيحة"});
+      radio.checked = q.c === oi;
+      radio.addEventListener("change", () => { q.c = oi; saveCfg(); renderQList(); });
+      const inp = h("input", {type:"text", id:"q"+qi+"o"+oi, maxlength:"120", placeholder:"الخيار " + (oi+1)});
+      inp.value = o;
+      inp.addEventListener("input", () => { q.o[oi] = inp.value; saveCfg(); });
+      opts.appendChild(h("div", {class:"opt" + (q.c === oi ? " correct" : "")}, radio, h("span",{class:"muted",text:SHAPES[oi]}), inp));
+    });
+    const fileIn = h("input", {type:"file", accept:"image/*", id:"q"+qi+"img", class:"visually-hidden"});
+    fileIn.addEventListener("change", async () => {
+      const f = fileIn.files && fileIn.files[0]; fileIn.value = "";
+      if (!f) return;
+      try { q.img = await shrinkImage(f); saveCfg(); renderQList(); }
+      catch(err){ flash("تعذّر فتح هذه الصورة. جرّبي صورة أخرى (JPG أو PNG).", true); }
+    });
+    const imgRow = q.img
+      ? h("div", {class:"qimg-edit"},
+          h("img", {src:q.img, alt:"صورة السؤال " + (qi+1)}),
+          h("div", {class:"row"},
+            h("label", {class:"btn small ghost", for:"q"+qi+"img"}, "تغيير الصورة"),
+            h("button", {class:"btn small ghost", type:"button", onclick: () => { q.img = null; saveCfg(); renderQList(); }}, "حذف الصورة")),
+          fileIn)
+      : h("div", {class:"row"}, h("label", {class:"btn small ghost", for:"q"+qi+"img"}, "🖼 إضافة صورة للسؤال"), fileIn);
+    const ta = h("input", {type:"text", class:"input", id:"q"+qi+"t", maxlength:"300", placeholder: q.img ? "نص السؤال (اختياري مع الصورة)" : "اكتبي السؤال هنا"});
+    ta.value = q.t;
+    ta.addEventListener("input", () => { q.t = ta.value; saveCfg(); });
+    const up = h("button", {class:"btn small ghost", type:"button", "aria-label":"تحريك لأعلى", disabled: qi === 0}, "↑");
+    up.addEventListener("click", () => { [T.cfg.qs[qi-1], T.cfg.qs[qi]] = [T.cfg.qs[qi], T.cfg.qs[qi-1]]; saveCfg(); renderQList(); });
+    const del = h("button", {class:"btn small ghost", type:"button", disabled: T.cfg.qs.length <= 1}, "حذف");
+    del.addEventListener("click", () => { T.cfg.qs.splice(qi, 1); saveCfg(); renderQList(); });
+    list.appendChild(h("div", {class:"card qcard"},
+      h("div", {class:"qhead"}, h("span", {class:"qnum", text:"المرحلة " + (qi+1)}), h("div", {class:"row"}, up, del)),
+      ta, imgRow, opts));
+  });
+  $("q-count").textContent = T.cfg.qs.length + " أسئلة";
+}
+$("in-title").addEventListener("input", e => { T.cfg.title = e.target.value; saveCfg(); });
+for (const k of ["subject","teacher","school"]){
+  $("in-" + k).addEventListener("input", e => { T.cfg[k] = e.target.value; saveCfg(); applyCredits(cfgCredits()); });
+}
+for (const id of ["em-all","em-top3"]){
+  $(id).addEventListener("change", e => { if (e.target.checked){ T.cfg.endMode = e.target.value; saveCfg(); } });
+}
+
+/* ---------- questions files ---------- */
+function flash(msg, isError){
+  const b = $("setup-banner"); b.textContent = msg; b.classList.remove("hidden");
+  b.style.borderColor = isError ? "var(--coral)" : "var(--grass)";
+  b.style.background = isError ? "#FFE9E6" : "#E7F8F0";
+  clearTimeout(flash.t); flash.t = setTimeout(() => { b.removeAttribute("style"); setupBanner(); }, 5000);
+}
+$("q-save").addEventListener("click", () => {
+  const data = { type:"sibaq-questions", version:1, title:T.cfg.title, subject:T.cfg.subject,
+    questions: T.cfg.qs.map(q => Object.assign({ question:q.t, options:[...q.o], correct:q.c }, isImgData(q.img) ? {image:q.img} : {})) };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  const safe = (clean(T.cfg.title, 60) || "اسئلة").replace(/[\\/:*?"<>|]+/g, "-");
+  a.download = safe + ".json";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  flash("تم حفظ الملف «" + a.download + "» في التنزيلات.");
+});
+$("q-file").addEventListener("change", async e => {
+  const f = e.target.files && e.target.files[0]; e.target.value = "";
+  if (!f) return;
+  try {
+    const data = JSON.parse(await f.text());
+    const list = Array.isArray(data.questions) ? data.questions : null;
+    if (!list || !list.length) throw new Error("empty");
+    const qs = list.map(q => {
+      const o = (Array.isArray(q.options) ? q.options : []).slice(0, 4).map(x => String(x == null ? "" : x));
+      while (o.length < 4) o.push("");
+      const c = Number.isInteger(q.correct) && q.correct >= 0 && q.correct < 4 ? q.correct : 0;
+      return { t:String(q.question || ""), o, c, img: isImgData(q.image) ? q.image : null };
+    });
+    T.cfg.qs = qs;
+    if (typeof data.title === "string" && data.title.trim()) T.cfg.title = data.title;
+    if (typeof data.subject === "string" && data.subject.trim()) T.cfg.subject = data.subject;
+    saveCfg(); renderSetup();
+    flash("تم فتح «" + f.name + "»: " + qs.length + " أسئلة.");
+  } catch(err){
+    flash("هذا الملف ليس ملف أسئلة من سباق الأسئلة. اختاري ملفاً محفوظاً بزر «حفظ الأسئلة كملف».", true);
+  }
+});
+$("in-pin").addEventListener("input", e => {
+  const v = toLatinDigits(e.target.value).replace(/\D/g, "");
+  e.target.value = v; if (v.length >= 4){ T.cfg.pin = v; $("pin-show").textContent = v; saveCfg(); }
+});
+$("pin-new").addEventListener("click", () => { T.cfg.pin = randPin(); $("in-pin").value = T.cfg.pin; $("pin-show").textContent = T.cfg.pin; saveCfg(); });
+$("in-link").addEventListener("input", e => { T.cfg.link = e.target.value.trim(); saveCfg(); });
+$("q-add").addEventListener("click", () => {
+  T.cfg.qs.push({t:"", o:["","","",""], c:0}); saveCfg(); renderQList();
+  const last = $("q" + (T.cfg.qs.length-1) + "t"); if (last){ last.focus(); last.scrollIntoView({block:"center"}); }
+});
+$("open-stage").addEventListener("click", () => {
+  const bad = T.cfg.qs.findIndex(q => (!clean(q.t, 300) && !isImgData(q.img)) || q.o.some(o => !clean(o, 120)));
+  if (bad >= 0){
+    const b = $("setup-banner"); b.textContent = "أكملي السؤال (نص أو صورة) وخياراته الأربعة في المرحلة " + (bad+1) + ".";
+    b.classList.remove("hidden"); $("q"+bad+"t").focus(); return;
+  }
+  if (String(T.cfg.pin).length < 4){ const b = $("setup-banner"); b.textContent = "الرقم السري لازم يكون 4 أرقام على الأقل."; b.classList.remove("hidden"); return; }
+  T.g = randId(6); T.status = "lobby"; T.players.clear(); T.order = [];
+  if (T.demo) addDemo();
+  saveHostState(); subscribeTeacher(); publishImages(false); publishHost(); renderStage();
+});
+function saveHostState(){ store.set("sibaq_host", {g:T.g, status:T.status, pin:T.cfg.pin}); }
+function subscribeTeacher(){
+  if (T.subPin && T.subPin !== T.cfg.pin) netUnsub(topicPlayers(T.subPin));
+  T.subPin = T.cfg.pin; netSub(topicPlayers(T.cfg.pin));
+}
+onMessage((topic, data) => {
+  if (MODE !== "teacher" || !T.g) return;
+  const pt = parseTopic(topic);
+  if (!pt || pt.kind !== "p" || pt.pin !== String(T.cfg.pin)) return;
+  if (!data || data.g !== T.g){ // left / changed character / old round
+    if (T.players.has(pt.id) && T.status === "lobby"){ T.players.delete(pt.id); T.order = T.order.filter(x => x !== pt.id); renderPlayers(); }
+    return;
+  }
+  const n = clean(data.n, 24), a = clean(data.a, 16);
+  if (!n || !a) return;
+  const prev = T.players.get(pt.id) || {};
+  T.players.set(pt.id, Object.assign(prev, {
+    key: pt.id, n, a,
+    i: Math.max(0, Math.min(+data.i||0, 99)), c: Math.max(0, Math.min(+data.c||0, 99)),
+    t: Math.max(0, +data.t||0), d: !!data.d, seen: Date.now(), online: true, demo:false
+  }));
+  if (!T.order.includes(pt.id)) T.order.push(pt.id);
+  renderPlayers();
+});
+// Students send a heartbeat every 15 s; dim anyone silent for 45 s.
+setInterval(() => {
+  if (MODE !== "teacher" || T.status === "setup") return;
+  let changed = false;
+  for (const [k, p] of [...T.players]){
+    if (p.demo) continue;
+    const on = Date.now() - (p.seen || 0) < 45000;
+    if (!on && T.status === "lobby"){ T.players.delete(k); T.order = T.order.filter(x => x !== k); changed = true; }
+    else if (on !== p.online){ p.online = on; changed = true; }
+  }
+  if (changed) renderPlayers();
+  publishHost(); // keeps the host fresh for late joiners
+}, 5000);
+
+function renderStage(){
+  show("v-stage");
+  $("st-title").textContent = T.cfg.title;
+  applyCredits(cfgCredits());
+  $("st-pin").textContent = T.cfg.pin;
+  $("st-link").textContent = T.cfg.link || "";
+  drawQR();
+  const sb = $("stage-banner");
+  if (NET.failed){ sb.textContent = "لا يوجد اتصال مباشر الآن، لذلك لن تظهر الطالبات. تأكدي من الإنترنت ثم حدّثي الصفحة."; sb.classList.remove("hidden"); }
+  else sb.classList.add("hidden");
+  const st = $("st-status");
+  st.className = "chip" + (T.status === "run" ? " run" : T.status === "end" ? " end" : "");
+  st.lastElementChild.textContent = T.status === "lobby" ? "في الانتظار" : T.status === "run" ? "السباق جارٍ" : "انتهى السباق";
+  $("btn-start").classList.toggle("hidden", T.status !== "lobby");
+  $("btn-end").classList.toggle("hidden", T.status !== "run");
+  $("btn-podium").classList.toggle("hidden", T.status !== "end");
+  $("btn-again").classList.toggle("hidden", T.status !== "end");
+  $("btn-demo").textContent = T.demo ? "إزالة اللاعبات التجريبيات" : "إضافة لاعبات تجريبيات للتجربة";
+  $("stage-grid").classList.toggle("compact", T.status !== "lobby");
+  $("lobby-view").classList.toggle("hidden", T.status !== "lobby");
+  $("race-view").classList.toggle("hidden", T.status === "lobby");
+  renderPlayers();
+}
+function drawQR(){
+  const box = $("qr"), link = T.cfg.link;
+  const size = T.status === "lobby" ? 230 : 150;
+  const key = link + "|" + size;
+  if (T.qrFor === key) return;
+  T.qrFor = key; box.textContent = "";
+  if (!link){ box.appendChild(h("div", {class:"muted", style:"padding:20px", text:"أضيفي رابط الصفحة في الإعداد"})); return; }
+  if (typeof QRCode === "undefined"){ T.qrFor = null; box.appendChild(h("div", {class:"muted", style:"padding:20px", text:"تعذّر تحميل الباركود"})); return; }
+  try { new QRCode(box, {text: link, width: size, height: size, colorDark:"#1B2A4A", colorLight:"#FFFFFF", correctLevel: QRCode.CorrectLevel.M}); }
+  catch(e){ box.appendChild(h("div", {class:"muted", text:"الرابط طويل جداً للباركود"})); }
+}
+
+let autoEndTimer = null;
+function renderPlayers(){
+  if (MODE !== "teacher" || T.status === "setup") return;
+  const all = [...T.players.values()];
+  const r = ranked(all);
+  const rankOf = new Map(r.map((p, i) => [p.key, i+1]));
+  const Q = T.cfg.qs.length;
+  const faces = $("lobby-faces"); faces.textContent = "";
+  if (!all.length){
+    faces.appendChild(h("div", {class:"empty"}, h("div",{class:"big",text:"📱"}), h("div",{text:"امسحي الباركود، ثم اكتبي الرقم السري واسمك."})));
+  } else T.order.forEach(k => { const p = T.players.get(k); if (p) faces.appendChild(h("div", {class:"face"}, h("span",{text:p.a}), h("b",{text:p.n}))); });
+  $("lobby-count").textContent = all.length + " طالبة";
+  const lanes = $("lanes"); lanes.textContent = "";
+  $("race-view").classList.toggle("dense", all.length > 12);
+  $("race-qs").textContent = Q + " أسئلة";
+  if (!all.length) lanes.appendChild(h("div", {class:"empty", text:"لا توجد طالبات بعد."}));
+  T.order.forEach(k => {
+    const p = T.players.get(k); if (!p) return;
+    const road = h("div", {class:"road", style:"--steps:" + Q},
+      h("div", {class:"runner" + (p.d ? " done" : ""), style:"--p:" + (Q ? Math.min(1, p.c / Q) : 0)},
+        h("span", {text:p.a}), h("span", {class:"rk", text: rankOf.get(k)})));
+    lanes.appendChild(h("div", {class:"lane" + (p.online ? "" : " off") + (p.demo ? " demo" : "")},
+      h("div", {class:"who"}, h("b", {text:p.n}), h("small", {text: p.c + " صحيحة · " + p.i + "/" + Q + (p.d ? " ✓" : "")})),
+      road));
+  });
+  const board = $("board"); board.textContent = "";
+  if (!r.length) board.appendChild(h("div", {class:"muted", text:"سيظهر الترتيب عند دخول الطالبات."}));
+  r.slice(0, 10).forEach((p, i) => board.appendChild(h("div", {class:"brow"},
+    h("span", {class:"n", text: i < 3 ? ["🥇","🥈","🥉"][i] : i+1}), h("span",{class:"a",text:p.a}), h("b",{text:p.n}),
+    h("span", {class:"s", text: p.c + "/" + Q}))));
+  if (r.length > 10) board.appendChild(h("div", {class:"muted", text:"و" + (r.length-10) + " أخريات"}));
+  const doneCount = all.filter(p => p.d).length;
+  const everyoneDone = all.length && doneCount > 0 && all.every(p => p.d || !p.online);
+  const topReached = T.cfg.endMode === "top3" && doneCount >= Math.min(3, all.length);
+  const shouldEnd = () => {
+    const a = [...T.players.values()], dc = a.filter(p => p.d).length;
+    return (a.length && dc > 0 && a.every(p => p.d || !p.online)) || (T.cfg.endMode === "top3" && a.length && dc >= Math.min(3, a.length));
+  };
+  if (T.status === "run" && (everyoneDone || topReached) && !autoEndTimer){
+    autoEndTimer = setTimeout(() => { autoEndTimer = null; if (T.status === "run" && shouldEnd()) endRace(); }, 1800);
+  }
+}
+
+$("btn-start").addEventListener("click", () => { T.status = "run"; saveHostState(); publishHost(); renderStage(); });
+function endRace(){
+  if (T.status !== "run") return;
+  T.status = "end"; saveHostState(); publishHost(); renderStage(); showPodium();
+}
+$("btn-end").addEventListener("click", endRace);
+$("btn-podium").addEventListener("click", showPodium);
+$("btn-again").addEventListener("click", () => {
+  T.g = randId(6); T.status = "lobby"; T.players.clear(); T.order = [];
+  if (T.demo) addDemo();
+  saveHostState(); publishHost(); renderStage();
+});
+$("btn-edit").addEventListener("click", () => {
+  netPub(topicHost(T.cfg.pin), {g:null, pin:T.cfg.pin, s:"setup"});
+  T.status = "setup"; T.g = null; saveHostState();
+  stopDemo(); T.demo = false; renderSetup();
+});
+$("btn-demo").addEventListener("click", () => { T.demo = !T.demo; if (T.demo) addDemo(); else stopDemo(); renderStage(); });
+
+const DEMO_NAMES = ["سارة","نورة","ريم","لمى","جود"];
+function addDemo(){
+  DEMO_NAMES.forEach((n, i) => {
+    const a = AVATARS[(i*3) % AVATARS.length][0], key = "demo-" + i;
+    T.players.set(key, {key, n, a, i:0, c:0, t:0, d:false, online:true, demo:true, skill: .55 + Math.random()*.4});
+    if (!T.order.includes(key)) T.order.push(key);
+  });
+  clearInterval(T.demoTimer);
+  let t0 = null;
+  T.demoTimer = setInterval(() => {
+    if (T.status !== "run") return;
+    if (!t0) t0 = Date.now();
+    const Q = T.cfg.qs.length; let changed = false;
+    for (const p of T.players.values()){
+      if (!p.demo || p.d || Math.random() > .35) continue;
+      p.i++; if (Math.random() < p.skill) p.c++; p.t = Date.now() - t0; if (p.i >= Q) p.d = true; changed = true;
+    }
+    if (changed) renderPlayers();
+  }, 900);
+}
+function stopDemo(){
+  clearInterval(T.demoTimer);
+  for (const [k, p] of [...T.players]) if (p.demo){ T.players.delete(k); T.order = T.order.filter(x => x !== k); }
+}
+
+/* ---------- podium + confetti ---------- */
+function showPodium(){
+  const r = ranked([...T.players.values()]), Q = T.cfg.qs.length;
+  const cols = $("podium-cols"); cols.textContent = "";
+  const slot = (p, cls, num) => p
+    ? h("div", {class:"pcol " + cls}, h("div",{class:"pav",text:p.a}), h("b",{text:p.n}), h("small",{text:p.c + "/" + Q + " صحيحة · " + fmtTime(p.t)}), h("div",{class:"block",text:num}))
+    : h("div", {class:"pcol " + cls}, h("div",{class:"block",text:num, style:"opacity:.25"}));
+  cols.append(slot(r[1], "second", "2"), slot(r[0], "first", "1"), slot(r[2], "third", "3"));
+  const rest = $("podium-rest"); rest.textContent = "";
+  r.slice(3).forEach((p, i) => rest.appendChild(h("div", {class:"brow"},
+    h("span",{class:"n",text:i+4}), h("span",{class:"a",text:p.a}), h("b",{text:p.n}), h("span",{class:"s",text:p.c + "/" + Q}))));
+  $("podium").classList.remove("hidden");
+  confetti();
+}
+$("podium-close").addEventListener("click", () => $("podium").classList.add("hidden"));
+function confetti(){
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const cv = $("confetti"), ctx = cv.getContext("2d");
+  cv.width = innerWidth; cv.height = innerHeight;
+  const colors = ["#FFC83D","#FF6B5B","#3E86F5","#2FB57F","#FFFFFF"];
+  const bits = Array.from({length:160}, () => ({x:Math.random()*cv.width, y:-Math.random()*cv.height, w:6+Math.random()*6, hh:8+Math.random()*8, vy:2+Math.random()*3, vx:-1+Math.random()*2, r:Math.random()*6, vr:-.2+Math.random()*.4, c:colors[Math.floor(Math.random()*colors.length)]}));
+  const t0 = performance.now();
+  (function frame(now){
+    ctx.clearRect(0,0,cv.width,cv.height);
+    for (const b of bits){ b.x += b.vx; b.y += b.vy; b.r += b.vr; ctx.save(); ctx.translate(b.x,b.y); ctx.rotate(b.r); ctx.fillStyle = b.c; ctx.fillRect(-b.w/2,-b.hh/2,b.w,b.hh); ctx.restore(); }
+    if (now - t0 < 5000 && !$("podium").classList.contains("hidden")) requestAnimationFrame(frame); else ctx.clearRect(0,0,cv.width,cv.height);
+  })(t0);
+}
+
+function startTeacher(){
+  MODE = "teacher";
+  loadCfg();
+  const saved = store.get("sibaq_host", null);
+  // A reload during a game keeps the same round so students stay on the track.
+  if (saved && saved.g && saved.status && saved.status !== "setup" && saved.pin === T.cfg.pin){
+    T.g = saved.g; T.status = saved.status;
+    subscribeTeacher(); publishImages(false); publishHost(); renderStage();
+  } else renderSetup();
+}
+
+/* ================= STUDENT ================= */
+const S = store.get("sibaq_player", null) || {};
+// S: {id, pin, n, a, g, i, c, t, d, start, ans:[]}
+// One id per browser tab, kept across refreshes, so two tabs on one device count as two students.
+try { S.id = sessionStorage.getItem("sibaq_sid") || randId(10); sessionStorage.setItem("sibaq_sid", S.id); } catch(e){ S.id = S.id || randId(10); }
+if (S.idOwner && S.idOwner !== S.id){ /* another tab wrote this record: start fresh */ Object.assign(S, {g:null, a:null, i:0, c:0, t:0, d:false, start:null, ans:[]}); }
+S.idOwner = S.id; store.set("sibaq_player", S);
+let sHost = null, sAnswering = false, sJoined = false, sPinSub = null;
+const mates = new Map(); // id -> player of the current pin
+const sImgs = new Map(); // image id -> data URL
+
+const saveS = () => store.set("sibaq_player", S);
+function listenPin(pin){
+  if (sPinSub === pin) return;
+  if (sPinSub){ netUnsub(topicHost(sPinSub)); netUnsub(topicPlayers(sPinSub)); netUnsub(topicImgs(sPinSub)); }
+  sPinSub = pin; sHost = null; mates.clear(); sImgs.clear();
+  netSub(topicHost(pin)); netSub(topicPlayers(pin)); netSub(topicImgs(pin));
+}
+onMessage((topic, data) => {
+  if (MODE !== "student") return;
+  const pt = parseTopic(topic);
+  if (!pt || pt.pin !== sPinSub) return;
+  if (pt.kind === "host"){
+    sHost = (data && data.g && Array.isArray(data.q) && String(data.pin) === sPinSub) ? data : null;
+  } else if (pt.kind === "img"){
+    if (data && isImgData(data.d) && imgId(data.d) === pt.id) sImgs.set(pt.id, data.d);
+  } else if (pt.kind === "p" && pt.id !== S.id){
+    if (data && data.g){
+      const n = clean(data.n, 24), a = clean(data.a, 16);
+      if (n && a) mates.set(pt.id, {key:pt.id, g:data.g, n, a, i:+data.i||0, c:+data.c||0, t:+data.t||0, d:!!data.d});
+    } else mates.delete(pt.id);
+  }
+  if (sJoined) studentRender();
+  else if ($("s-avatar") && !$("s-avatar").classList.contains("hidden")) renderAvatars();
+});
+function pushPlayer(){
+  if (!sJoined || !S.pin) return;
+  netPub(topicPlayer(S.pin, S.id), S.a && S.g ? {g:S.g, n:S.n, a:S.a, i:S.i||0, c:S.c||0, t:S.t||0, d:!!S.d, ts:Date.now()} : {g:null});
+}
+onNetUp(() => { if (MODE === "student") pushPlayer(); });
+setInterval(() => { if (MODE === "student" && sJoined && S.a) pushPlayer(); }, 15000);
+
+const classmates = () => [...mates.values()].filter(p => p.g === S.g);
+function sShow(id){
+  for (const v of ["s-join","s-avatar","s-wait","s-q","s-done","s-off"]) $(v).classList.toggle("hidden", v !== id);
+}
+function studentRender(){
+  if (MODE !== "student") return;
+  if (NET.failed && !NET.up){ sShow("s-off"); return; }
+  if (!sJoined){ sShow("s-join"); return; }
+  if (!sHost){ sShow("s-wait"); renderWait("انتظري… المعلمة تجهّز السباق"); return; }
+  $("s-brand").textContent = clean(sHost.ti, 60) || DEFAULT_INFO.title;
+  if (sHost.cr && typeof sHost.cr === "object") applyCredits({ subject:clean(sHost.cr.subject, 40), teacher:clean(sHost.cr.teacher, 50), school:clean(sHost.cr.school, 60) });
+  if (sHost.g !== S.g){
+    // New round from the teacher: keep name and character, reset progress.
+    S.g = sHost.g; S.i = 0; S.c = 0; S.t = 0; S.d = false; S.start = null; S.ans = []; saveS();
+    pushPlayer();
+  }
+  if (!S.a){ renderAvatars(); sShow("s-avatar"); return; }
+  if (sHost.s === "lobby"){ sShow("s-wait"); renderWait(); return; }
+  const Q = sHost.q.length;
+  if (sHost.s === "run" && !S.d && (S.i||0) < Q){
+    if (!S.start){ S.start = Date.now(); saveS(); }
+    if (!sAnswering) renderQuestion();
+    sShow("s-q"); return;
+  }
+  renderDone(); sShow("s-done");
+}
+function renderWait(msg){
+  $("s-wait-me").textContent = S.a || "⏳";
+  $("s-wait-hi").textContent = msg || ("أهلاً يا " + S.n + "!");
+  const faces = $("s-wait-faces"); faces.textContent = "";
+  classmates().forEach(p => faces.appendChild(h("div", {class:"face"}, h("span",{text:p.a}), h("b",{text:p.n}))));
+  $("s-change").classList.toggle("hidden", !S.a || !sHost || sHost.s !== "lobby");
+}
+function renderAvatars(){
+  const grid = $("s-avgrid"); grid.textContent = "";
+  const taken = new Map(classmates().map(p => [p.a, p.n]));
+  AVATARS.forEach(([e, name]) => {
+    const b = h("button", {type:"button", class:"av" + (S.pick === e ? " sel" : ""), "aria-pressed": S.pick === e ? "true" : "false"},
+      h("span",{text:e}), h("small",{text:name}), taken.has(e) ? h("em",{text:"مع " + taken.get(e)}) : null);
+    b.addEventListener("click", () => { S.pick = e; renderAvatars(); });
+    grid.appendChild(b);
+  });
+  $("s-av-btn").disabled = !S.pick;
+}
+$("s-av-btn").addEventListener("click", () => {
+  if (!S.pick) return;
+  S.a = S.pick; saveS(); pushPlayer(); studentRender();
+});
+$("s-change").addEventListener("click", () => {
+  if (!sHost || sHost.s !== "lobby") return;
+  S.pick = S.a; S.a = null; saveS(); pushPlayer(); studentRender();
+});
+
+let sRendered = "";
+function renderQImage(q){
+  const wrap = $("s-qimg"), id = typeof q[3] === "string" ? q[3] : null;
+  if (!id){ wrap.classList.add("hidden"); wrap.textContent = ""; wrap.dataset.id = ""; return; }
+  wrap.classList.remove("hidden");
+  const data = sImgs.get(id);
+  const want = id + (data ? ":ok" : ":wait");
+  if (wrap.dataset.id === want) return;
+  wrap.dataset.id = want; wrap.textContent = "";
+  if (data){
+    const im = h("img", {src:data, alt:"صورة السؤال"});
+    wrap.appendChild(h("button", {type:"button", class:"qimg-btn", "aria-label":"تكبير الصورة", onclick: () => openZoom(data)}, im, h("span", {class:"zoomhint", text:"🔍 اضغطي للتكبير"})));
+  } else wrap.appendChild(h("div", {class:"qimg-wait", text:"جارٍ تحميل الصورة…"}));
+}
+function openZoom(src){ $("zoom-img").src = src; $("zoom").classList.remove("hidden"); }
+$("zoom").addEventListener("click", () => $("zoom").classList.add("hidden"));
+function renderQuestion(){
+  const Q = sHost.q.length, idx = S.i || 0, q = sHost.q[idx];
+  if (!q) return;
+  renderQImage(q);
+  // Rebuild only when the question changes, so incoming updates never swap buttons under a finger.
+  const sig = S.g + "|" + idx + "|" + JSON.stringify(q);
+  if (sig === sRendered && $("s-answers").children.length) return;
+  sRendered = sig;
+  $("s-qnum").textContent = "السؤال " + (idx+1) + " من " + Q;
+  $("s-me-small").textContent = S.a + " " + S.n + " · " + (S.c||0) + " صحيحة";
+  $("s-bar").style.width = Math.round(idx / Q * 100) + "%";
+  const qt = clean(q[0], 300);
+  $("s-qtext").textContent = qt;
+  $("s-qtext").classList.toggle("hidden", !qt);
+  $("s-feedback").textContent = ""; $("s-feedback").className = "feedback";
+  const box = $("s-answers"); box.textContent = "";
+  (Array.isArray(q[1]) ? q[1] : []).slice(0, 4).forEach((o, oi) => {
+    const b = h("button", {type:"button", class:"ans c" + oi}, h("span",{class:"shape",text:SHAPES[oi]}), h("span",{text:clean(o,120)}));
+    b.addEventListener("click", () => answer(oi));
+    box.appendChild(b);
+  });
+}
+function answer(oi){
+  if (sAnswering || !sHost) return;
+  const Q = sHost.q.length, q = sHost.q[S.i||0]; if (!q) return;
+  sAnswering = true;
+  const ok = oi === q[2];
+  [...$("s-answers").children].forEach((b, k) => { b.disabled = true; if (k === q[2]) b.classList.add("right"); else if (k === oi) b.classList.add("wrong"); else b.classList.add("dim"); });
+  const fb = $("s-feedback");
+  fb.textContent = ok ? "إجابة صحيحة! " + S.a + " تتقدّم" : "إجابة خاطئة، تابعي!";
+  fb.className = "feedback " + (ok ? "ok" : "no");
+  S.ans = (S.ans || []).concat(oi);
+  S.i = (S.i||0) + 1; if (ok) S.c = (S.c||0) + 1;
+  S.t = Date.now() - (S.start || Date.now());
+  if (S.i >= Q) S.d = true;
+  $("s-bar").style.width = Math.round(S.i / Q * 100) + "%";
+  saveS(); pushPlayer();
+  setTimeout(() => { sAnswering = false; studentRender(); }, 1200);
+}
+function renderDone(){
+  const Q = sHost ? sHost.q.length : 0;
+  const me = {key:S.id, n:S.n, a:S.a, i:S.i||0, c:S.c||0, t:S.t||0, d:!!S.d};
+  const list = ranked(classmates().concat(me));
+  const pos = list.findIndex(p => p.key === me.key) + 1;
+  const ended = sHost && sHost.s === "end";
+  $("s-medal").textContent = ended ? (["🥇","🥈","🥉"][pos-1] || S.a) : S.a;
+  $("s-rank").textContent = (ended ? "ترتيبك: " : "ترتيبك الآن: ") + ordinal(pos) + " من " + list.length;
+  $("s-score").textContent = "أجبتِ " + (S.c||0) + " صحيحة من " + Q + " · الوقت " + fmtTime(S.t);
+  $("s-done-note").textContent = ended
+    ? (pos === 1 ? "مبروك! أنتِ الفائزة الأولى 🎉 شاهدي الشاشة." : "انتهى السباق. شاهدي الفائزات على الشاشة.")
+    : "أحسنتِ! انتظري حتى تنتهي زميلاتك وتعلن المعلمة النتائج.";
+  if (ended && !S.d) $("s-done-note").textContent = "انتهى السباق قبل أن تكملي. أجبتِ " + (S.i||0) + " من " + Q + ". شاهدي الفائزات على الشاشة.";
+}
+
+$("s-join-btn").addEventListener("click", tryJoin);
+$("s-name").addEventListener("keydown", e => { if (e.key === "Enter") tryJoin(); });
+$("s-pin").addEventListener("input", e => { e.target.value = toLatinDigits(e.target.value).replace(/\D/g, ""); });
+async function tryJoin(){
+  const pin = $("s-pin").value.trim(), name = clean($("s-name").value, 24);
+  const err = $("s-join-err");
+  const fail = msg => { err.textContent = msg; err.classList.remove("hidden"); };
+  err.classList.add("hidden");
+  if (!pin) return fail("اكتبي الرقم السري الظاهر على الشاشة.");
+  if (!name) return fail("اكتبي اسمك.");
+  if (NET.failed) return fail("تعذّر الاتصال. تأكدي من الإنترنت ثم حدّثي الصفحة.");
+  const btn = $("s-join-btn"); btn.disabled = true; btn.textContent = "جارٍ التحقق…";
+  listenPin(pin);
+  for (let k = 0; !sHost && k < 20; k++) await new Promise(r => setTimeout(r, 400));
+  btn.disabled = false; btn.textContent = "التالي ←";
+  if (!sHost) return fail(NET.up ? "الرقم السري غير صحيح، أو لم تفتح المعلمة شاشة السباق بعد." : "ما زال الاتصال جارياً… حاولي مرة ثانية بعد لحظات.");
+  const sameRound = S.g === sHost.g && S.n === name && S.pin === pin;
+  if (!sameRound) Object.assign(S, {pin, n:name, a:null, g:sHost.g, i:0, c:0, t:0, d:false, start:null, ans:[]});
+  S.pin = pin; sJoined = true; saveS();
+  pushPlayer(); studentRender();
+}
+
+function startStudent(){
+  MODE = "student";
+  show("v-student");
+  if (S.pin) $("s-pin").value = S.pin;
+  if (S.n) $("s-name").value = S.n;
+  sShow("s-join");
+  // Rejoin automatically after a refresh in the same round.
+  if (S.pin && S.n && S.g){
+    listenPin(S.pin);
+    let n = 0;
+    const iv = setInterval(() => {
+      if (sJoined){ clearInterval(iv); return; }
+      if (sHost && sHost.g === S.g){ sJoined = true; pushPlayer(); studentRender(); clearInterval(iv); }
+      else if (++n > 25) clearInterval(iv);
+    }, 400);
+  }
+}
+
+/* ================= BOOT ================= */
+$("go-student").addEventListener("click", () => { location.hash = "student"; startStudent(); });
+if (location.hash === "#teacher") startTeacher();
+else if (location.hash === "#student") startStudent();
+// otherwise the welcome card stays, with one button for students
+netStart();
+</script>
+</body>
+</html>
