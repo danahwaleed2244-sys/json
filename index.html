@@ -86,6 +86,7 @@ label.btn:focus-within,#q-file:focus-visible + *{outline:3px solid var(--blue)}
 .zoom span{color:#fff;font-weight:700}
 
 /* splash */
+.teacher-link{color:var(--muted);font-size:14px;text-decoration:underline}
 .splash{min-height:100%;display:grid;place-items:center;padding:24px 16px}
 .splash .card{max-width:440px;width:100%;text-align:center;display:flex;flex-direction:column;gap:16px}
 .splash .big{font-size:56px;line-height:1}
@@ -229,6 +230,7 @@ label.btn:focus-within,#q-file:focus-visible + *{outline:3px solid var(--blue)}
     <div class="credits"><span data-subject></span><span data-teacher></span></div>
     <p class="muted" style="margin:0">كل طالبة تختار شخصيتها وتتسابق مع زميلاتها على شاشة الفصل.</p>
     <button class="btn sun" id="go-student" type="button">دخول الطالبة</button>
+    <a class="teacher-link" href="#teacher">شاشة المعلمة</a>
   </div>
 </section>
 
@@ -1212,6 +1214,11 @@ function startStudent(){
 
 /* ================= BOOT ================= */
 $("go-student").addEventListener("click", () => { location.hash = "student"; startStudent(); });
+// Switching between the two links in the same tab only changes the hash, so reload to open the right screen.
+window.addEventListener("hashchange", () => {
+  const want = location.hash === "#teacher" ? "teacher" : location.hash === "#student" ? "student" : null;
+  if (want && want !== MODE) location.reload();
+});
 if (location.hash === "#teacher") startTeacher();
 else if (location.hash === "#student") startStudent();
 // otherwise the welcome card stays, with one button for students
