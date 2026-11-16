@@ -630,8 +630,12 @@ const T = {
   players: new Map(),  // id -> player
   order: [],
   subPin: null,
-  demo: false, demoTimer: null, qrFor: null
+  demo: false, demoTimer: null, qrFor: null,
+  hid: randId(8),      // this tab
+  ct: 0,               // when this tab last took charge of the race
+  passive: false       // another teacher tab with the same PIN took over
 };
+function takeCharge(){ T.ct = Date.now(); T.passive = false; }
 function loadCfg(){
   const c = store.get("sibaq_cfg", null);
   T.cfg = {
@@ -664,9 +668,9 @@ function publishImages(force){
   }
 }
 const cfgCredits = () => ({ subject:clean(T.cfg.subject, 40), teacher:clean(T.cfg.teacher, 50), school:clean(T.cfg.school, 60) });
-const hostPayload = () => ({ g:T.g, pin:T.cfg.pin, ti:clean(T.cfg.title, 60), cr:cfgCredits(), em:T.cfg.endMode, s:T.status, q:packedQs(), ts:Date.now() });
+const hostPayload = () => ({ hid:T.hid, ct:T.ct, g:T.g, pin:T.cfg.pin, ti:clean(T.cfg.title, 60), cr:cfgCredits(), em:T.cfg.endMode, s:T.status, q:packedQs(), ts:Date.now() });
 function publishHost(){
-  if (T.status === "setup" || !T.g) return;
+  if (T.status === "setup" || !T.g || T.passive) return;
   netPub(topicHost(T.cfg.pin), hostPayload());
 }
 onNetUp(() => { if (MODE === "teacher" && T.status !== "setup"){ publishImages(true); publishHost(); } });
@@ -801,13 +805,28 @@ $("open-stage").addEventListener("click", () => {
   if (String(T.cfg.pin).length < 4){ const b = $("setup-banner"); b.textContent = "الرقم السري لازم يكون 4 أرقام على الأقل."; b.classList.remove("hidden"); return; }
   T.g = randId(6); T.status = "lobby"; T.players.clear(); T.order = [];
   if (T.demo) addDemo();
-  saveHostState(); subscribeTeacher(); publishImages(false); publishHost(); renderStage();
+  takeCharge(); saveHostState(); subscribeTeacher(); publishImages(false); publishHost(); renderStage();
 });
 function saveHostState(){ store.set("sibaq_host", {g:T.g, status:T.status, pin:T.cfg.pin}); }
 function subscribeTeacher(){
-  if (T.subPin && T.subPin !== T.cfg.pin) netUnsub(topicPlayers(T.subPin));
-  T.subPin = T.cfg.pin; netSub(topicPlayers(T.cfg.pin));
+  if (T.subPin && T.subPin !== T.cfg.pin){ netUnsub(topicPlayers(T.subPin)); netUnsub(topicHost(T.subPin)); }
+  T.subPin = T.cfg.pin; netSub(topicPlayers(T.cfg.pin)); netSub(topicHost(T.cfg.pin));
 }
+// Only one teacher screen per PIN drives the race: the one opened most recently.
+onMessage((topic, data) => {
+  if (MODE !== "teacher" || T.status === "setup") return;
+  const pt = parseTopic(topic);
+  if (!pt || pt.kind !== "host" || pt.pin !== String(T.cfg.pin) || !data) return;
+  if (data.hid && data.hid !== T.hid && (+data.ct || 0) > T.ct && !T.passive){
+    T.passive = true; renderStage();
+  }
+});
+// Another tab of this browser changed the questions: use the new copy here too.
+window.addEventListener("storage", e => {
+  if (MODE !== "teacher" || e.key !== "sibaq_cfg") return;
+  loadCfg();
+  if (T.status === "setup") renderSetup(); else { T.qrFor = null; renderStage(); }
+});
 onMessage((topic, data) => {
   if (MODE !== "teacher" || !T.g) return;
   const pt = parseTopic(topic);
@@ -849,7 +868,12 @@ function renderStage(){
   $("st-link").textContent = T.cfg.link || "";
   drawQR();
   const sb = $("stage-banner");
-  if (NET.failed){ sb.textContent = "لا يوجد اتصال مباشر الآن، لذلك لن تظهر الطالبات. تأكدي من الإنترنت ثم حدّثي الصفحة."; sb.classList.remove("hidden"); }
+  if (T.passive){
+    sb.textContent = "";
+    sb.append("شاشة المعلمة مفتوحة الآن في نافذة أو جهاز آخر بنفس الرقم السري، وهي اللي ترسل الأسئلة للطالبات. هذه النافذة متوقفة. ");
+    sb.appendChild(h("button", {type:"button", class:"btn small", onclick: () => { loadCfg(); takeCharge(); publishImages(true); publishHost(); renderStage(); }}, "استخدمي هذه الشاشة بدلاً منها"));
+    sb.classList.remove("hidden");
+  } else if (NET.failed){ sb.textContent = "لا يوجد اتصال مباشر الآن، لذلك لن تظهر الطالبات. تأكدي من الإنترنت ثم حدّثي الصفحة."; sb.classList.remove("hidden"); }
   else sb.classList.add("hidden");
   const st = $("st-status");
   st.className = "chip" + (T.status === "run" ? " run" : T.status === "end" ? " end" : "");
@@ -887,7 +911,7 @@ function renderPlayers(){
   if (!all.length){
     faces.appendChild(h("div", {class:"empty"}, h("div",{class:"big",text:"📱"}), h("div",{text:"امسحي الباركود، ثم اكتبي الرقم السري واسمك."})));
   } else T.order.forEach(k => { const p = T.players.get(k); if (p) faces.appendChild(h("div", {class:"face"}, h("span",{text:p.a}), h("b",{text:p.n}))); });
-  $("lobby-count").textContent = all.length + " طالبة";
+  $("lobby-count").textContent = all.length + " طالبة · " + Q + " أسئلة";
   const lanes = $("lanes"); lanes.textContent = "";
   $("race-view").classList.toggle("dense", all.length > 12);
   $("race-qs").textContent = Q + " أسئلة";
@@ -932,7 +956,7 @@ $("btn-again").addEventListener("click", () => {
   saveHostState(); publishHost(); renderStage();
 });
 $("btn-edit").addEventListener("click", () => {
-  netPub(topicHost(T.cfg.pin), {g:null, pin:T.cfg.pin, s:"setup"});
+  if (!T.passive) netPub(topicHost(T.cfg.pin), {hid:T.hid, ct:T.ct, g:null, pin:T.cfg.pin, s:"setup"});
   T.status = "setup"; T.g = null; saveHostState();
   stopDemo(); T.demo = false; renderSetup();
 });
@@ -998,7 +1022,7 @@ function startTeacher(){
   const saved = store.get("sibaq_host", null);
   // A reload during a game keeps the same round so students stay on the track.
   if (saved && saved.g && saved.status && saved.status !== "setup" && saved.pin === T.cfg.pin){
-    T.g = saved.g; T.status = saved.status;
+    T.g = saved.g; T.status = saved.status; takeCharge();
     subscribeTeacher(); publishImages(false); publishHost(); renderStage();
   } else renderSetup();
 }
